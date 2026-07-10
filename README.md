@@ -12,8 +12,8 @@ A classic Three Men's Morris game built for my game project course, in two versi
 ## Play it online 
 
 ## Link 
-  https://dmberile.github.io/Projects-Using-AI/ 
-
+ https://dmberile.github.io/Projects_Using_AI/
+ 
 ![image alt](https://github.com/dmberile/Projects-Using-AI/blob/ab7f149e750f44a58df8c4ab1cd4248ce720cd7d/game.png) 
 ## Rules
 
