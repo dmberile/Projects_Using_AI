@@ -2,8 +2,8 @@
 
 # Projects
 
-## [1_Three Men's Morris Game /](1_Three Men's Morris Game  - A Fun Game for the Brain 
-
+## [1_Three Men's Morris Game/](1_TMM)  - A Fun Game for the Brain 
+ 
 A classic Three Men's Morris game built for my game project course, in two versions:
 
 - **`index.html`** — a playable web version (works on phones too). No install needed.
