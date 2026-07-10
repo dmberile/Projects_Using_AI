@@ -1,11 +1,14 @@
 # Three Men's Morris — Game Project
 
+
 A classic Three Men's Morris game built for my game project course, in two versions:
 
 - **`index.html`** — a playable web version (works on phones too). No install needed.
 - **`main.cpp`** — a C++ console version with the same rules and AI.
 
 ## Play it online
+
+![image alt](https://github.com/dmberile/Projects-Using-AI/blob/ab7f149e750f44a58df8c4ab1cd4248ce720cd7d/game.png) 
 ## Rules
 
 - 3x3 board, 2 players (Blue and Black), 3 pieces each.
