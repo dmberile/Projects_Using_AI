@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Three Men's Morris — a game project</title>
+<meta name="description" content="A playable Three Men's Morris game: place your 3 pieces, then move along the lines. First to line up 3 wins.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Karla:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBF9F3; --grid:#E9E6DA; --ink:#33322C; --ink-soft:#6E6C62;
+    --blue:#2B5BC7; --red:#C7402B; --hover:#F1EEE2;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; color:var(--ink);
+    font-family:'Karla',sans-serif; font-size:16px; line-height:1.6;
+    background:
+      repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 26px),
+      repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 26px),
+      var(--paper);
+    display:flex; flex-direction:column; align-items:center; padding:24px 16px 48px;
+  }
+  h1{
+    font-family:'Caveat',cursive; font-weight:700; font-size:52px;
+    margin:8px 0 0; line-height:1.1; color:var(--blue); transform:rotate(-1.5deg);
+  }
+  .tagline{margin:2px 0 24px; color:var(--ink-soft); font-size:15px}
+  .wrap{width:100%; max-width:430px}
+  .modes{display:flex; gap:10px; margin-bottom:14px}
+  button{
+    flex:1; font-family:'Karla',sans-serif; font-weight:600; font-size:15px;
+    color:var(--ink); background:transparent; border:1.5px solid var(--ink);
+    border-radius:8px; padding:10px 12px; cursor:pointer;
+  }
+  button:hover{background:var(--hover)}
+  button:focus-visible{outline:2.5px solid var(--blue); outline-offset:2px}
+  button:active{transform:scale(.98)}
+  .players{display:flex; gap:12px; margin-bottom:14px}
+  .chip{
+    flex:1; display:flex; align-items:center; gap:10px; padding:8px 12px;
+    border:1.5px dashed transparent; border-radius:10px; transition:border-color .2s;
+    background:rgba(255,255,255,.55);
+  }
+  .chip.active{border-color:currentColor}
+  .chip .who{font-weight:600; font-size:14px; line-height:1.3}
+  .chip .tally{height:22px; margin-top:1px}
+  #chip1{color:var(--blue)} #chip2{color:var(--ink)}
+  .boardcard{
+    background:rgba(255,255,255,.6); border:1.5px solid var(--ink);
+    border-radius:12px; padding:14px;
+  }
+  svg#board{display:block; width:100%; height:auto}
+  .msg{text-align:center; margin-top:14px; min-height:64px}
+  #status{font-family:'Caveat',cursive; font-size:30px; font-weight:700; margin:0; line-height:1.2}
+  #status.win{color:var(--red)}
+  #phase{margin:2px 0 0; font-size:14px; color:var(--ink-soft)}
+  footer{margin-top:34px; font-size:13px; color:var(--ink-soft); text-align:center; max-width:430px}
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important; animation:none !important} }
+  @media (max-width:420px){ h1{font-size:42px} }
+</style>
+</head>
+<body>
+<h1>Three Men's Morris</h1>
+<p class="tagline">a game project — straight from my class notebook</p>
+
+<div class="wrap">
+  <div class="modes">
+    <button id="btn-hvh">2 players</button>
+    <button id="btn-hvc">Vs computer</button>
+  </div>
+
+  <div class="players">
+    <div class="chip" id="chip1">
+      <svg width="20" height="20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#2B5BC7"/></svg>
+      <div><div class="who">Player 1 · blue</div><svg class="tally" id="tally1" width="80" height="22" aria-label="Player 1 wins"></svg></div>
+    </div>
+    <div class="chip" id="chip2">
+      <svg width="20" height="20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="#33322C"/></svg>
+      <div><div class="who" id="name2">Player 2 · black</div><svg class="tally" id="tally2" width="80" height="22" aria-label="Player 2 wins"></svg></div>
+    </div>
+  </div>
+
+  <div class="boardcard">
+    <svg id="board" viewBox="0 0 340 340" role="img" aria-label="Three Men's Morris board">
+      <g fill="none" stroke="#33322C" stroke-width="2.5" stroke-linecap="round">
+        <path d="M70,70 C120,67 220,73 270,70"/>
+        <path d="M70,170 C130,173 210,167 270,170"/>
+        <path d="M70,270 C120,272 220,268 270,270"/>
+        <path d="M70,70 C67,120 73,220 70,270"/>
+        <path d="M170,70 C173,130 167,210 170,270"/>
+        <path d="M270,70 C272,120 268,220 270,270"/>
+        <path d="M70,70 C130,135 210,205 270,270"/>
+        <path d="M270,70 C210,135 130,205 70,270"/>
+      </g>
+      <line id="winline" x1="0" y1="0" x2="0" y2="0" stroke="#C7402B" stroke-width="5" stroke-linecap="round" opacity="0"/>
+      <g id="hints"></g>
+      <g id="pieces"></g>
+      <g id="hits"></g>
+    </svg>
+  </div>
+
+  <div class="msg">
+    <p id="status">Pick a mode to start</p>
+    <p id="phase"></p>
+  </div>
+</div>
+
+<footer>
+  Rules: take turns placing your 3 pieces on empty spots. Once all 6 are down, move
+  one piece per turn along a drawn line to an empty spot — no repeating an exact move,
+  no skipping turns. First to line up 3 in a row, column, or diagonal wins.
+</footer>
+
+<script>
+const POS=[[70,70],[170,70],[270,70],[70,170],[170,170],[270,170],[70,270],[170,270],[270,270]];
+const ADJ=[[1,3,4],[0,2,4],[1,4,5],[0,4,6],[0,1,2,3,5,6,7,8],[2,4,8],[3,4,7],[4,6,8],[4,5,7]];
+const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const C={1:"#2B5BC7",2:"#33322C"},RED="#C7402B",NS="http://www.w3.org/2000/svg";
+let board,placed,player,vsCPU,selected,history,over,started=false,pieces=[],wins={1:0,2:0};
+const $=id=>document.getElementById(id);
+const hintsG=$("hints"),piecesG=$("pieces"),hitsG=$("hits"),winline=$("winline");
+
+function phase(){return(placed[1]<3||placed[2]<3)?"placement":"movement";}
+function moves(p){
+  const m=[];
+  if(phase()==="placement"){for(let i=0;i<9;i++)if(board[i]===0)m.push([-1,i]);}
+  else{for(let i=0;i<9;i++){if(board[i]!==p)continue;
+    for(const n of ADJ[i]){if(board[n]!==0)continue;if(!history.has(p+":"+i+">"+n))m.push([i,n]);}}}
+  return m;
+}
+function winLine(p){return LINES.find(L=>L.every(i=>board[i]===p))||null;}
+function apply(p,m){
+  if(m[0]===-1){board[m[1]]=p;placed[p]++;}
+  else{board[m[0]]=0;board[m[1]]=p;history.add(p+":"+m[0]+">"+m[1]);}
+}
+function addPiece(p,cell){
+  const g=document.createElementNS(NS,"g");
+  g.setAttribute("transform","translate("+POS[cell][0]+","+POS[cell][1]+")");
+  g.style.transition="transform .35s cubic-bezier(.2,.8,.3,1)";
+  const ring=document.createElementNS(NS,"circle");
+  ring.setAttribute("r",25);ring.setAttribute("fill","none");
+  ring.setAttribute("stroke",RED);ring.setAttribute("stroke-width",2.5);ring.setAttribute("opacity","0");
+  const c=document.createElementNS(NS,"circle");
+  c.setAttribute("r",19);c.setAttribute("fill",C[p]);
+  c.style.transition="opacity .2s";
+  g.appendChild(ring);g.appendChild(c);piecesG.appendChild(g);
+  const pc={g,ring,c,cell,player:p};pieces.push(pc);return pc;
+}
+function pieceAt(cell){return pieces.find(x=>x.cell===cell);}
+function tally(svg,n){
+  svg.innerHTML="";
+  let x=4;
+  for(let k=1;k<=n;k++){
+    if(k%5===0){
+      const d=document.createElementNS(NS,"line");
+      d.setAttribute("x1",x-30);d.setAttribute("y1",16);d.setAttribute("x2",x+2);d.setAttribute("y2",5);
+      d.setAttribute("stroke","currentColor");d.setAttribute("stroke-width",2);d.setAttribute("stroke-linecap","round");
+      svg.appendChild(d);x+=12;
+    }else{
+      const l=document.createElementNS(NS,"line");
+      l.setAttribute("x1",x);l.setAttribute("y1",4);l.setAttribute("x2",x-1);l.setAttribute("y2",18);
+      l.setAttribute("stroke","currentColor");l.setAttribute("stroke-width",2);l.setAttribute("stroke-linecap","round");
+      svg.appendChild(l);x+=7;
+    }
+  }
+}
+function newGame(cpu){
+  board=Array(9).fill(0);placed={1:0,2:0};player=1;vsCPU=cpu;selected=null;
+  history=new Set();over=false;started=true;
+  pieces=[];piecesG.innerHTML="";winline.setAttribute("opacity","0");
+  $("status").classList.remove("win");
+  $("name2").textContent=cpu?"Computer · black":"Player 2 · black";
+  render();
+}
+function cpuMove(){
+  const me=2,opp=1,ms=moves(me);
+  const test=(p,m,fn)=>{const b=board.slice(),pl={...placed},h=new Set(history);
+    apply(p,m);const r=fn();board=b;placed=pl;history=h;return r;};
+  for(const m of ms)if(test(me,m,()=>!!winLine(me)))return m;
+  const safe=ms.filter(m=>test(me,m,()=>!moves(opp).some(om=>test(opp,om,()=>!!winLine(opp)))));
+  const pool=safe.length?safe:ms;
+  return pool.find(m=>m[1]===4)||pool[Math.floor(Math.random()*pool.length)];
+}
+function doMove(p,m){
+  if(m[0]===-1){apply(p,m);const pc=addPiece(p,m[1]);
+    pc.c.style.opacity="0";requestAnimationFrame(()=>pc.c.style.opacity="1");}
+  else{const pc=pieceAt(m[0]);apply(p,m);pc.cell=m[1];
+    pc.g.setAttribute("transform","translate("+POS[m[1]][0]+","+POS[m[1]][1]+")");}
+}
+function endTurn(){
+  const L=winLine(player);
+  if(L){
+    over=true;wins[player]++;
+    winline.setAttribute("x1",POS[L[0]][0]);winline.setAttribute("y1",POS[L[0]][1]);
+    winline.setAttribute("x2",POS[L[2]][0]);winline.setAttribute("y2",POS[L[2]][1]);
+    winline.setAttribute("opacity","0.75");
+    pieces.forEach(pc=>{if(!L.includes(pc.cell))pc.c.style.opacity="0.3";});
+    $("status").textContent=(vsCPU&&player===2?"Computer":"Player "+player)+" wins!";
+    $("status").classList.add("win");
+    $("phase").textContent="Start a new game to play again.";
+    render(true);return;
+  }
+  player=player===1?2:1;
+  if(moves(player).length===0){
+    over=true;const w=player===1?2:1;wins[w]++;
+    $("status").textContent="Player "+player+" is stuck — "+(vsCPU&&w===2?"computer":"Player "+w)+" wins!";
+    $("status").classList.add("win");
+    $("phase").textContent="Start a new game to play again.";
+    render(true);return;
+  }
+  render();
+  if(vsCPU&&player===2&&!over)setTimeout(()=>{doMove(2,cpuMove());endTurn();},500);
+}
+function clickCell(i){
+  if(!started||over||(vsCPU&&player===2))return;
+  const ms=moves(player);
+  if(phase()==="placement"){
+    if(ms.some(m=>m[1]===i)){doMove(player,[-1,i]);endTurn();}
+    return;
+  }
+  if(board[i]===player){selected=(selected===i?null:i);render();return;}
+  if(selected!==null&&ms.some(m=>m[0]===selected&&m[1]===i)){
+    const s=selected;selected=null;doMove(player,[s,i]);endTurn();
+  }
+}
+function render(final){
+  hintsG.innerHTML="";hitsG.innerHTML="";
+  tally($("tally1"),wins[1]);tally($("tally2"),wins[2]);
+  $("chip1").classList.toggle("active",started&&!over&&player===1);
+  $("chip2").classList.toggle("active",started&&!over&&player===2);
+  const ms=started&&!over?moves(player):[];
+  const humanTurn=started&&!over&&!(vsCPU&&player===2);
+  const dests=new Set();
+  if(humanTurn){
+    if(phase()==="placement")ms.forEach(m=>dests.add(m[1]));
+    else if(selected!==null)ms.filter(m=>m[0]===selected).forEach(m=>dests.add(m[1]));
+  }
+  for(let i=0;i<9;i++){
+    if(board[i]!==0)continue;
+    const d=document.createElementNS(NS,"circle");
+    d.setAttribute("cx",POS[i][0]);d.setAttribute("cy",POS[i][1]);
+    if(dests.has(i)){d.setAttribute("r",13);d.setAttribute("fill","none");
+      d.setAttribute("stroke",RED);d.setAttribute("stroke-width",2.5);
+      d.setAttribute("transform","rotate(-6 "+POS[i][0]+" "+POS[i][1]+")");}
+    else{d.setAttribute("r",5.5);d.setAttribute("fill","#B9B6A9");}
+    hintsG.appendChild(d);
+  }
+  pieces.forEach(pc=>{
+    const sel=selected===pc.cell;
+    const movable=humanTurn&&phase()==="movement"&&pc.player===player&&selected===null&&ms.some(m=>m[0]===pc.cell);
+    pc.ring.setAttribute("opacity",sel?"1":movable?"0.55":"0");
+    pc.ring.setAttribute("stroke-dasharray",sel?"0":"5 4");
+  });
+  if(!final){
+    for(let i=0;i<9;i++){
+      const h=document.createElementNS(NS,"circle");
+      h.setAttribute("cx",POS[i][0]);h.setAttribute("cy",POS[i][1]);
+      h.setAttribute("r",30);h.setAttribute("fill","transparent");
+      h.style.cursor=humanTurn?"pointer":"default";
+      h.addEventListener("click",()=>clickCell(i));
+      hitsG.appendChild(h);
+    }
+  }
+  if(!started){$("phase").textContent="";return;}
+  if(!over){
+    $("status").textContent=vsCPU&&player===2?"Computer is thinking…":(vsCPU?"Your turn":"Player "+player+"'s turn");
+    const left=3-placed[player];
+    $("phase").textContent=phase()==="placement"
+      ?"Placement — tap a spot ("+left+" piece"+(left===1?"":"s")+" left)"
+      :"Movement — tap a piece, then a circled spot. No move can be repeated.";
+  }
+}
+$("btn-hvh").addEventListener("click",()=>newGame(false));
+$("btn-hvc").addEventListener("click",()=>newGame(true));
+</script>
+</body>
+</html>
