@@ -1,12 +1,18 @@
-# Three Men's Morris — Game Project
 
+
+# Projects
+
+## [1_Three Men's Morris Game /](1_Three Men's Morris Game  - A Fun Game for the Brain 
 
 A classic Three Men's Morris game built for my game project course, in two versions:
 
 - **`index.html`** — a playable web version (works on phones too). No install needed.
-- **`main.cpp`** — a C++ console version with the same rules and AI.
+- **`main.cpp`** — a C++ console version with the same rules
 
-## Play it online
+## Play it online 
+
+## Link 
+  https://dmberile.github.io/Projects-Using-AI/ 
 
 ![image alt](https://github.com/dmberile/Projects-Using-AI/blob/ab7f149e750f44a58df8c4ab1cd4248ce720cd7d/game.png) 
 ## Rules
